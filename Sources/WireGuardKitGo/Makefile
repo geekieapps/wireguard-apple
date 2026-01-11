@@ -6,6 +6,8 @@
 ARCHS ?= x86_64 arm64
 PLATFORM_NAME ?= macosx
 SDKROOT ?= $(shell xcrun --sdk $(PLATFORM_NAME) --show-sdk-path)
+# When called from Xcode, CONFIGURATION_BUILD_DIR will be set to the build products directory
+# For standalone builds, use $(CURDIR)/out
 CONFIGURATION_BUILD_DIR ?= $(CURDIR)/out
 CONFIGURATION_TEMP_DIR ?= $(CURDIR)/.tmp
 

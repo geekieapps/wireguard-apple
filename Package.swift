@@ -36,7 +36,6 @@ let package = Package(
             ],
             publicHeadersPath: ".",
             linkerSettings: [
-                .unsafeFlags(["-L", "Sources/WireGuardKitGo/out"]),
                 .linkedLibrary("wg-go"),
                 .linkedLibrary("resolv")
             ]
