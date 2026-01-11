@@ -32,7 +32,9 @@ let package = Package(
                 "go.sum",
                 "api-apple.go",
                 "api-xray.go",
-                "Makefile"
+                "Makefile",
+                ".tmp",
+                "out"
             ],
             publicHeadersPath: ".",
             linkerSettings: [
