@@ -20,6 +20,7 @@ GOARCH_arm64 := arm64
 GOARCH_x86_64 := amd64
 GOOS_macosx := darwin
 GOOS_iphoneos := ios
+GOOS_iphonesimulator := ios
 
 build: $(DESTDIR)/libwg-go.a
 version-header: $(DESTDIR)/wireguard-go-version.h
@@ -40,8 +41,14 @@ $(BUILDDIR)/libwg-go-$(1).a: export CGO_LDFLAGS := $(CFLAGS_PREFIX) $(ARCH)
 $(BUILDDIR)/libwg-go-$(1).a: export GOOS := $(GOOS_$(PLATFORM_NAME))
 $(BUILDDIR)/libwg-go-$(1).a: export GOARCH := $(GOARCH_$(1))
 $(BUILDDIR)/libwg-go-$(1).a: $(GOROOT)/.prepared go.mod
-	go build -ldflags=-w -trimpath -v -o "$(BUILDDIR)/libwg-go-$(1).a" -buildmode c-archive
+	go build -tags=ios -ldflags=-w -trimpath -v -o "$(BUILDDIR)/libwg-go-$(1).a" -buildmode c-archive
 	rm -f "$(BUILDDIR)/libwg-go-$(1).h"
+	@if [ "$(PLATFORM_NAME)" = "iphonesimulator" ]; then \
+		$(CC) $(CFLAGS_PREFIX) $(1) -c darwin_stubs.c -o "$(BUILDDIR)/darwin_stubs-$(1).o"; \
+		ar -r "$(BUILDDIR)/libwg-go-$(1).a" "$(BUILDDIR)/darwin_stubs-$(1).o"; \
+		ranlib "$(BUILDDIR)/libwg-go-$(1).a"; \
+		rm -f "$(BUILDDIR)/darwin_stubs-$(1).o"; \
+	fi
 endef
 $(foreach ARCH,$(ARCHS),$(eval $(call libwg-go-a,$(ARCH))))
 
