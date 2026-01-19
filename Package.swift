@@ -32,11 +32,12 @@ let package = Package(
                 "go.sum",
                 "api-apple.go",
                 "api-xray.go",
-                "Makefile"
+                "Makefile",
+                ".tmp",
+                "out"
             ],
             publicHeadersPath: ".",
             linkerSettings: [
-                .unsafeFlags(["-L", "Sources/WireGuardKitGo/out"]),
                 .linkedLibrary("wg-go"),
                 .linkedLibrary("resolv")
             ]
