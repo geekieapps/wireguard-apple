@@ -28,6 +28,7 @@ extern char *SingTunStop();
 // LibXray — upstream xtls/libxray, compiled into the same Go binary.
 // All functions return a base64-encoded response JSON. Caller must free() the result.
 extern void  LibXraySetMemoryLimit(int64_t limitBytes);
+extern void  LibXraySetTunFd(int32_t fd);
 extern char *LibXrayRunXray(const char *base64Text);
 extern char *LibXrayRunXrayFromJSON(const char *base64Text);
 extern char *LibXrayStopXray();

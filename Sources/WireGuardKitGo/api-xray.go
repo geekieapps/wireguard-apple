@@ -19,6 +19,14 @@ func LibXraySetMemoryLimit(limitBytes C.int64_t) {
 	debug.SetMemoryLimit(int64(limitBytes))
 }
 
+// SetTunFd passes the iOS utun file descriptor to XRay so the proxy/tun inbound
+// can read packets from the NetworkExtension TUN interface. Call before RunXrayFromJSON.
+//
+//export LibXraySetTunFd
+func LibXraySetTunFd(fd C.int32_t) {
+	libxray.SetTunFd(int32(fd))
+}
+
 // Run Xray instance from a config file on disk.
 // base64Text is a base64-encoded RunXrayRequest JSON.
 // Returns a base64-encoded response JSON. Caller must free the returned string.
