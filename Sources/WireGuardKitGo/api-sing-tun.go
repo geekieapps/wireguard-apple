@@ -171,7 +171,7 @@ func SingTunStart(tunFd C.int, mtu C.int, proxyAddr *C.char) *C.char {
 		return singErr("create tun: " + err.Error())
 	}
 
-	stack, err := sing_tun.NewStack("gvisor", sing_tun.StackOptions{
+	stack, err := sing_tun.NewStack("system", sing_tun.StackOptions{
 		Context:    context.Background(),
 		Tun:        dev,
 		TunOptions: tunOptions,
