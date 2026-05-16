@@ -20,6 +20,11 @@ extern void wgBumpSockets(int handle);
 extern void wgDisableSomeRoamingForBrokenMobileSemantics(int handle);
 extern const char *wgVersion();
 
+// SingTun — sing-tun gVisor TUN stack with UoT UDP forwarding, compiled into the same Go binary.
+// All functions return a base64-encoded response JSON. Caller must free() the result.
+extern char *SingTunStart(int tunFd, int mtu, const char *proxyAddr);
+extern char *SingTunStop();
+
 // LibXray — upstream xtls/libxray, compiled into the same Go binary.
 // All functions return a base64-encoded response JSON. Caller must free() the result.
 extern void  LibXraySetMemoryLimit(int64_t limitBytes);
