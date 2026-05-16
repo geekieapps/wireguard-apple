@@ -6,8 +6,18 @@ package main
 import "C"
 
 import (
+	"runtime/debug"
+
 	libxray "github.com/xtls/libxray"
 )
+
+// SetMemoryLimit sets the Go runtime's soft heap limit.
+// Call this before RunXray. limitBytes <= 0 disables the limit.
+//
+//export LibXraySetMemoryLimit
+func LibXraySetMemoryLimit(limitBytes C.int64_t) {
+	debug.SetMemoryLimit(int64(limitBytes))
+}
 
 // Run Xray instance from a config file on disk.
 // base64Text is a base64-encoded RunXrayRequest JSON.
