@@ -20,16 +20,14 @@ extern void wgBumpSockets(int handle);
 extern void wgDisableSomeRoamingForBrokenMobileSemantics(int handle);
 extern const char *wgVersion();
 
-typedef void (*libxray_sockcallback)(uintptr_t fd, void* ctx);
-extern char *LibXrayCutGeoData(const char *datDir, const char *dstDir, const char *cutCodePath);
-extern char *LibXrayLoadGeoData(const char *datDir, const char *name, const char *geoType);
-extern char *LibXrayPing(const char *datDir, const char *configPath, int timeout, const char *url, const char *proxy);
-extern char *LibXrayQueryStats(const char *server, const char *dir);
-extern char *LibXrayCustomUUID(const char *text);
-extern char *LibXrayTestXray(const char *datDir, const char *configPath);
-extern char *LibXrayRunXray(const char *datDir, const char *configPath, int64_t maxMemory);
+// LibXray — upstream xtls/libxray, compiled into the same Go binary.
+// All functions return a base64-encoded response JSON. Caller must free() the result.
+extern char *LibXrayRunXray(const char *base64Text);
+extern char *LibXrayRunXrayFromJSON(const char *base64Text);
 extern char *LibXrayStopXray();
+extern int   LibXrayGetXrayState();
+extern char *LibXrayTestXray(const char *base64Text);
+extern char *LibXrayPing(const char *base64Text);
 extern char *LibXrayXrayVersion();
-extern char* LibXraySetSockCallback(libxray_sockcallback cb, void* ctx);
 
 #endif
