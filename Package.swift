@@ -10,7 +10,8 @@ let package = Package(
         .iOS(.v15)
     ],
     products: [
-        .library(name: "WireGuardKit", targets: ["WireGuardKit"])
+        .library(name: "WireGuardKit", targets: ["WireGuardKit"]),
+        .library(name: "WireGuardKitGo", targets: ["WireGuardKitGo"]),
     ],
     dependencies: [],
     targets: [
@@ -30,8 +31,8 @@ let package = Package(
                 "goruntime-boottime-over-monotonic.diff",
                 "go.mod",
                 "go.sum",
-                "api-apple.go",
                 "api-xray.go",
+                "api-apple.go",
                 "Makefile",
                 ".tmp",
                 "out"
