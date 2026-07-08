@@ -38,6 +38,16 @@ private enum State {
     case temporaryShutdown(_ settingsGenerator: PacketTunnelSettingsGenerator)
 }
 
+/// Holds a `WireGuardAdapter.LogHandler` so it can be registered with the Go runtime's logger
+/// independently of `WireGuardAdapter`'s own lifecycle. See `WireGuardAdapter.setupLogHandler`.
+private final class LogHandlerBox {
+    let logHandler: WireGuardAdapter.LogHandler
+
+    init(logHandler: @escaping WireGuardAdapter.LogHandler) {
+        self.logHandler = logHandler
+    }
+}
+
 public class WireGuardAdapter {
     public typealias LogHandler = (WireGuardLogLevel, String) -> Void
 
@@ -144,17 +154,19 @@ public class WireGuardAdapter {
     }
 
     deinit {
-        // Force remove logger to make sure that no further calls to the instance of this class
-        // can happen after deallocation.
-        wgSetLogger(nil, nil)
-
         // Cancel network monitor
         networkMonitor?.cancel()
 
-        // Shutdown the tunnel
+        // Shutdown the tunnel. `wgTurnOff` synchronously stops the device's goroutines,
+        // including the ones that emit log messages, so it must run before the logger
+        // is torn down below.
         if case .started(let handle, _) = self.state {
             wgTurnOff(handle)
         }
+
+        // Now that the device's goroutines have stopped, it's safe to remove the logger
+        // so that no further calls can reach this (about to be deallocated) instance.
+        wgSetLogger(nil, nil)
     }
 
     // MARK: - Public methods
@@ -304,18 +316,27 @@ public class WireGuardAdapter {
     // MARK: - Private methods
 
     /// Setup WireGuard log handler.
+    ///
+    /// The Go runtime's logger is registered via a raw pointer with no synchronization
+    /// against `wgSetLogger(nil, nil)` — a background goroutine can pass the "logger is set"
+    /// check and then call back into the registered context just after deinit clears it.
+    /// To avoid that landing on freed memory, the context points to a small, independently
+    /// retained `LogHandlerBox` rather than `self`, so it stays valid for the lifetime of the
+    /// process (a bounded, per-adapter-instance leak) regardless of `WireGuardAdapter`'s
+    /// own lifecycle.
     private func setupLogHandler() {
-        let context = Unmanaged.passUnretained(self).toOpaque()
+        let box = LogHandlerBox(logHandler: logHandler)
+        let context = Unmanaged.passRetained(box).toOpaque()
         wgSetLogger(context) { context, logLevel, message in
             guard let context = context, let message = message else { return }
 
-            let unretainedSelf = Unmanaged<WireGuardAdapter>.fromOpaque(context)
+            let box = Unmanaged<LogHandlerBox>.fromOpaque(context)
                 .takeUnretainedValue()
 
             let swiftString = String(cString: message).trimmingCharacters(in: .newlines)
             let tunnelLogLevel = WireGuardLogLevel(rawValue: logLevel) ?? .verbose
 
-            unretainedSelf.logHandler(tunnelLogLevel, swiftString)
+            box.logHandler(tunnelLogLevel, swiftString)
         }
     }
 
