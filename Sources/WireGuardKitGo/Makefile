@@ -34,8 +34,13 @@ version-header: $(DESTDIR)/wireguard-go-version.h
 export GOTOOLCHAIN := local
 
 REAL_GOROOT := $(shell GOTOOLCHAIN=local go env GOROOT 2>/dev/null)
+# The patched GOROOT copy is stamped with the Go version, so upgrading Go re-copies and re-patches
+# it. With a plain stamp, a build folder from the previous Go kept its old standard library and the
+# new compiler failed against it (e.g. "package crypto/mldsa is not in std").
+REAL_GOVERSION := $(shell GOTOOLCHAIN=local go env GOVERSION 2>/dev/null)
 export GOROOT := $(BUILDDIR)/goroot
-$(GOROOT)/.prepared:
+GOROOT_STAMP := $(GOROOT)/.prepared-$(REAL_GOVERSION)
+$(GOROOT_STAMP):
 	[ -n "$(REAL_GOROOT)" ]
 	mkdir -p "$(GOROOT)"
 	rsync -a --delete --exclude=pkg/obj/go-build "$(REAL_GOROOT)/" "$(GOROOT)/"
@@ -48,7 +53,7 @@ $(BUILDDIR)/libwg-go-$(1).a: export CGO_CFLAGS := $(CFLAGS_PREFIX) $(ARCH)
 $(BUILDDIR)/libwg-go-$(1).a: export CGO_LDFLAGS := $(CFLAGS_PREFIX) $(ARCH)
 $(BUILDDIR)/libwg-go-$(1).a: export GOOS := $(GOOS_$(PLATFORM_NAME))
 $(BUILDDIR)/libwg-go-$(1).a: export GOARCH := $(GOARCH_$(1))
-$(BUILDDIR)/libwg-go-$(1).a: $(GOROOT)/.prepared go.mod
+$(BUILDDIR)/libwg-go-$(1).a: $(GOROOT_STAMP) go.mod
 	go build -tags=ios,with_gvisor -ldflags=-w -trimpath -v -o "$(BUILDDIR)/libwg-go-$(1).a" -buildmode c-archive
 	rm -f "$(BUILDDIR)/libwg-go-$(1).h"
 	@if [ "$(PLATFORM_NAME)" = "iphonesimulator" ]; then \
@@ -60,7 +65,7 @@ $(BUILDDIR)/libwg-go-$(1).a: $(GOROOT)/.prepared go.mod
 endef
 $(foreach ARCH,$(ARCHS),$(eval $(call libwg-go-a,$(ARCH))))
 
-$(DESTDIR)/wireguard-go-version.h: go.mod $(GOROOT)/.prepared
+$(DESTDIR)/wireguard-go-version.h: go.mod $(GOROOT_STAMP)
 	 sed -E -n 's/.*golang\.zx2c4\.com\/wireguard +v[0-9.]+-[0-9]+-([0-9a-f]{8})[0-9a-f]{4}.*/#define WIREGUARD_GO_VERSION "\1"/p' "$<" > "$@"
 
 $(DESTDIR)/libwg-go.a: $(foreach ARCH,$(ARCHS),$(BUILDDIR)/libwg-go-$(ARCH).a)
