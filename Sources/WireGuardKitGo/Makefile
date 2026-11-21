@@ -27,7 +27,13 @@ GOOS_iphonesimulator := ios
 build: $(DESTDIR)/libwg-go.a
 version-header: $(DESTDIR)/wireguard-go-version.h
 
-REAL_GOROOT := $(shell go env GOROOT 2>/dev/null)
+# Never let the go command switch to a downloaded toolchain when go.mod asks for a newer Go than the
+# installed one: the switch re-points GOROOT at the download and silently drops the runtime patch
+# below. Fail loudly instead; the fix is to upgrade the installed Go (`brew upgrade go`).
+# Make 3.81 (macOS) doesn't export variables into $(shell), so it's repeated on the call below.
+export GOTOOLCHAIN := local
+
+REAL_GOROOT := $(shell GOTOOLCHAIN=local go env GOROOT 2>/dev/null)
 export GOROOT := $(BUILDDIR)/goroot
 $(GOROOT)/.prepared:
 	[ -n "$(REAL_GOROOT)" ]

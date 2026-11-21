@@ -26,15 +26,10 @@ extern char *SingTunStart(int tunFd, int mtu, const char *proxyAddr);
 extern char *SingTunStop();
 
 // LibXray — upstream xtls/libxray, compiled into the same Go binary.
-// All functions return a base64-encoded response JSON. Caller must free() the result.
+// LibXrayInvoke takes a plain JSON request envelope ({"apiVersion":3,"method":...,"payload":...})
+// and returns a plain JSON response ({"success":...,"data":...,"error":...}).
+// Caller must free() the result. The TUN fd goes into the Xray config's root `env` as "xray.tun.fd".
 extern void  LibXraySetMemoryLimit(int64_t limitBytes);
-extern void  LibXraySetTunFd(int32_t fd);
-extern char *LibXrayRunXray(const char *base64Text);
-extern char *LibXrayRunXrayFromJSON(const char *base64Text);
-extern char *LibXrayStopXray();
-extern int   LibXrayGetXrayState();
-extern char *LibXrayTestXray(const char *base64Text);
-extern char *LibXrayPing(const char *base64Text);
-extern char *LibXrayXrayVersion();
+extern char *LibXrayInvoke(const char *requestJSON);
 
 #endif
