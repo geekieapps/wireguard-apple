@@ -29,7 +29,7 @@ extern char *SingTunStop();
 // LibXrayInvoke takes a plain JSON request envelope ({"apiVersion":3,"method":...,"payload":...})
 // and returns a plain JSON response ({"success":...,"data":...,"error":...}).
 // Caller must free() the result. The TUN fd goes into the Xray config's root `env` as "xray.tun.fd".
-// libxray manages Go memory itself on iOS (libxray/memory), so there's no memory-limit export.
+extern void  LibXraySetMemoryLimit(int64_t limitBytes);
 extern char *LibXrayInvoke(const char *requestJSON);
 
 #endif

@@ -6,14 +6,20 @@ package main
 import "C"
 
 import (
+	"runtime/debug"
+
 	libxray "github.com/xtls/libxray"
 )
 
-// LibXrayInvoke forwards to libxray's single structured entrypoint.
+// SetMemoryLimit sets the Go runtime's soft heap limit.
+// Call this before invoking runXray. limitBytes <= 0 disables the limit.
 //
-// Memory is libxray's job on iOS: the first runXray in a process sets a 30 MB
-// soft heap limit and GC percent 10, and returns freed memory to the OS every
-// second (libxray/memory). Don't add a competing SetMemoryLimit export.
+//export LibXraySetMemoryLimit
+func LibXraySetMemoryLimit(limitBytes C.int64_t) {
+	debug.SetMemoryLimit(int64(limitBytes))
+}
+
+// LibXrayInvoke forwards to libxray's single structured entrypoint.
 //
 // requestJSON is a plain (not base64) UTF-8 JSON envelope:
 //
